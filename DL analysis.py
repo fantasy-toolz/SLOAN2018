@@ -4,12 +4,12 @@ import requests
 from BeautifulSoup import BeautifulSoup
 # These packages are for tabular manipulation
 import pandas as pd
-import numpy as np
+#import numpy as np
 # These packages are for graphing
-import matplotlib.pyplot as plt
-from mpl_toolkits.mplot3d import Axes3D
+#import matplotlib.pyplot as plt
+#from mpl_toolkits.mplot3d import Axes3D
 # This is how the KMeans Sausage is made
-from sklearn.cluster import KMeans
+#from sklearn.cluster import KMeans
 # This is a hack to make sure my IDE will display my Tables!
 import sys;
 sys.setrecursionlimit(40000)
@@ -17,15 +17,67 @@ sys.setrecursionlimit(40000)
 
 url      =   "http://www.foxsports.com/mlb/transactions?year={0}&month={1}&type={2}"
 months = range(0,12)
-dl_types = [25, #15
+dl_down_types = [25, #15
             30, #60
             65, # 7
             76] # 10
+dl_up_types = [35, #15
+            37, #60
+            67, # 7
+            77] # 10
 
-# Grab 2016 Data
+def Grab_Transaction_Data(in_year, month_list, in_transation_list):
+    rows = []
+    for month in month_list:
+        for dl in dl_down_types:
+            year_url = url.format(str(in_year), str(month), str(dl))
+            r               = requests.get(year_url)
+            soup            = BeautifulSoup(r.content)
+            paginatory      = soup.find("div", { "class" : "wisbb_paginator"}) 
+            if paginatory != None:
+                for anchor in paginatory.findAll('a'):
+                    print year_url
+                    print anchor.text
+            table_data      = soup.find("table", { "class" : "wisbb_standardTable wisbb_altRowColors"})   
+            if table_data == None:
+                pass
+            else: 
+                headers = [header.text for header in table_data.findAll('th')]
+                for row in table_data.findAll("tr"):
+                    cells = row.findAll("td")
+                    if len(cells) == 4:
+                        new_row = []
+                        for anchor in cells[0].findAll('a'):
+                             new_row.append(anchor.text)
+                        for anchor in cells[1].findAll('a'):
+                             new_row.append(anchor.text)
+                        for i in cells[2:]:
+                            new_row.append(i.find(text=True))
+                        new_row.append(dl)
+                        new_row.append(month)
+                        rows.append(new_row)
+    strip_rows = []
+    for row in rows:
+        strip_rows.append([str(row[1]),
+                           str(row[3]),
+                           str(row[4]),
+                           str(row[5]),
+                           row[6],
+                           row[7]])
+    headers.append("DL Code")
+    headers.append("Month")
+    df = pd.DataFrame(strip_rows, columns=headers)
+    df['Date Time'] = pd.to_datetime(df['Date']+"/{0}".format(in_year))
+    return df
+
+up_transactions = Grab_Transaction_Data('2017', months[:11], dl_up_types)
+down_transactions = Grab_Transaction_Data('2017', months[:11], dl_down_types)
+unique_names = down_transactions.groupby("Player")['Player'].first()
+
+# Grab 2017 Down Data
 rows = []
 for month in months:
-    for dl in dl_types:
+    for dl in dl_down_types:
         year_url = url.format(str(2016), str(month), str(dl))
 #        year_url = url.format(str(2017), str(4), str(0))
         r               = requests.get(year_url)
