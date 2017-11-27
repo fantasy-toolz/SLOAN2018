@@ -1,0 +1,23 @@
+get unique player list
+
+for unique player:
+	query player up dates
+	query player down dates
+	status = 1
+	for day in dates
+		calculate up date
+		calculate down date
+		if  down date is empty and  up date is empty
+			fill matrix with status
+		if up date is empty and down date is > day
+			fill matrix with status
+		if player down is empty and player up > day
+			status = 0
+			fill matrix with status
+		if down date > day 
+			fill matrix with status
+		if down date = day
+			status = 0 
+			fill matrix
+			
+		
