@@ -27,7 +27,6 @@ graph_percentiles = [5, 10, 25, 50, 75, 90, 95]
 # GP Length
 GP_len = 162
 
-game_logs_dat = r"C:\Users\Erich Rentz\Documents\GitHub\SLOAN2018-master\data\gamelogs.dat"
 
 def Read_DAT2Dict(in_file):
     out_dict = {}
@@ -203,7 +202,7 @@ def aggregate_growth_chart_2(write_to_csv=None):
             headers = ['Player', '{0}.Slope'.format(key), '{0}.R^2'.format(key), '{0}.MAE'.format(key), "{0}.Intersect".format(key)]
             rows.append(temp_df.values.tolist()[0])
         df = pd.DataFrame(rows, columns=headers)
-        df.to_csv(os.path.join(write_to_csv, 'GC 2 {0}.csv'.format(key)), index = False)
+        df.to_csv(os.path.join(write_to_csv, 'GC_2_{0}.csv'.format(key)), index = False)
         df_dict.append(df)
     final_df = df_dict[0]
     for df in df_dict[1:]:
@@ -236,7 +235,7 @@ def graph_growth_chart_3(in_player, in_stat, in_dict, in_denominator = None, gen
             sub_y = y[start_day:stop_day]
             sub_x = sub_x.reshape(start_day-stop_day+1,1)
             sub_y = sub_y.reshape(start_day-stop_day+1,1)
-            regr.fit(sub_x, sub_y)
+             regr.fit(sub_x, sub_y)
             reg_list.append(regr) 
     # Run through windows graphing the linear models 
     day = premier_date
@@ -271,7 +270,19 @@ def graph_growth_chart_3(in_player, in_stat, in_dict, in_denominator = None, gen
 ##### Main
 
 # Grab DDD Stats from game logs dat
-DDStats = Read_DAT2Dict(game_logs_dat)
+
+try:
+    game_logs_dat = r"C:\Users\Erich Rentz\Documents\GitHub\SLOAN2018-master\data\gamelogs.dat"
+
+    DDStats = Read_DAT2Dict(game_logs_dat)
+
+except:
+    game_logs_dat = 'data/gamelogs.dat'
+
+    DDStats = Read_DAT2Dict(game_logs_dat)
+
+
+    
 print(DDStats.keys())
 
 # Re-organize by game
@@ -323,7 +334,12 @@ graph_growth_chart_3('Whit Merrifield', 'H',  GStats, {'POS':'2B'}, gen_fig=True
 #graph_growth_chart_3('Mallex Smith', 'R',  GStats, gen_fig=True)
 
 # Quick Clustering Exercise on 3 True Outcomes
-final_df = aggregate_growth_chart_2(r'C:\Users\Erich Rentz\Documents\GitHub\SLOAN2018\data')
+try:
+    final_df = aggregate_growth_chart_2(r'C:\Users\Erich Rentz\Documents\GitHub\SLOAN2018\data')
+
+except:
+    final_df = aggregate_growth_chart_2(r'data')
+
 
 X = final_df[['BB.Slope','HR.Slope', 'SO.Slope']].values
 X_std = StandardScaler().fit_transform(X)
@@ -346,3 +362,7 @@ for i in range(len(X)):
 fig
 
 #final_df.to_csv(r'C:\Users\Erich Rentz\Documents\GitHub\SLOAN2018\data\final_df.csv', index=False)
+
+plt.show(block=True)
+
+
